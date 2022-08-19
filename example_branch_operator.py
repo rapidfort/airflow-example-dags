@@ -20,22 +20,24 @@
 
 import random
 
-import pendulum
-
 from airflow import DAG
-from airflow.operators.empty import EmptyOperator
+from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import BranchPythonOperator
-from airflow.utils.edgemodifier import Label
-from airflow.utils.trigger_rule import TriggerRule
+from airflow.utils.dates import days_ago
+
+args = {
+    'owner': 'airflow',
+}
 
 with DAG(
     dag_id='example_branch_operator',
-    start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
-    catchup=False,
-    schedule="@daily",
+    default_args=args,
+    start_date=days_ago(2),
+    schedule_interval="@daily",
     tags=['example', 'example2'],
 ) as dag:
-    run_this_first = EmptyOperator(
+
+    run_this_first = DummyOperator(
         task_id='run_this_first',
     )
 
@@ -47,19 +49,18 @@ with DAG(
     )
     run_this_first >> branching
 
-    join = EmptyOperator(
+    join = DummyOperator(
         task_id='join',
-        trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS,
+        trigger_rule='none_failed_or_skipped',
     )
 
     for option in options:
-        t = EmptyOperator(
+        t = DummyOperator(
             task_id=option,
         )
 
-        empty_follow = EmptyOperator(
+        dummy_follow = DummyOperator(
             task_id='follow_' + option,
         )
 
-        # Label is optional here, but it can help identify more complex branches
-        branching >> Label(option) >> t >> empty_follow >> join
+        branching >> t >> dummy_follow >> join

@@ -17,5 +17,6 @@
 # under the License.
 
 
-def print_stuff():
+# pylint: disable=missing-docstring
+def print_stuff():  # noqa: D103
     print("annotated!")

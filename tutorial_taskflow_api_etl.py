@@ -16,25 +16,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# pylint: disable=missing-function-docstring
 
 # [START tutorial]
 # [START import_module]
 import json
 
-import pendulum
-
 from airflow.decorators import dag, task
+from airflow.utils.dates import days_ago
 
 # [END import_module]
 
+# [START default_args]
+# These args will get passed on to each operator
+# You can override them on a per-task basis during operator initialization
+default_args = {
+    'owner': 'airflow',
+}
+# [END default_args]
+
 
 # [START instantiate_dag]
-@dag(
-    schedule=None,
-    start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
-    catchup=False,
-    tags=['example'],
-)
+@dag(default_args=default_args, schedule_interval=None, start_date=days_ago(2), tags=['example'])
 def tutorial_taskflow_api_etl():
     """
     ### TaskFlow API Tutorial Documentation
@@ -42,7 +45,7 @@ def tutorial_taskflow_api_etl():
     the TaskFlow API using three simple tasks for Extract, Transform, and Load.
     Documentation that goes along with the Airflow TaskFlow API tutorial is
     located
-    [here](https://airflow.apache.org/docs/apache-airflow/stable/tutorial_taskflow_api.html)
+    [here](https://airflow.apache.org/docs/stable/tutorial_taskflow_api.html)
     """
     # [END instantiate_dag]
 
@@ -88,7 +91,7 @@ def tutorial_taskflow_api_etl():
         instead of saving it to end user review, just prints it out.
         """
 
-        print(f"Total order value is: {total_order_value:.2f}")
+        print("Total order value is: %.2f" % total_order_value)
 
     # [END load]
 

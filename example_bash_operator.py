@@ -18,24 +18,28 @@
 
 """Example DAG demonstrating the usage of the BashOperator."""
 
-import datetime
-
-import pendulum
+from datetime import timedelta
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
-from airflow.operators.empty import EmptyOperator
+from airflow.operators.dummy import DummyOperator
+from airflow.utils.dates import days_ago
+
+args = {
+    'owner': 'airflow',
+}
 
 with DAG(
     dag_id='example_bash_operator',
-    schedule='0 0 * * *',
-    start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
-    catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=60),
+    default_args=args,
+    schedule_interval='0 0 * * *',
+    start_date=days_ago(2),
+    dagrun_timeout=timedelta(minutes=60),
     tags=['example', 'example2'],
     params={"example_key": "example_value"},
 ) as dag:
-    run_this_last = EmptyOperator(
+
+    run_this_last = DummyOperator(
         task_id='run_this_last',
     )
 
@@ -62,15 +66,6 @@ with DAG(
     )
     # [END howto_operator_bash_template]
     also_run_this >> run_this_last
-
-# [START howto_operator_bash_skip]
-this_will_skip = BashOperator(
-    task_id='this_will_skip',
-    bash_command='echo "hello world"; exit 99;',
-    dag=dag,
-)
-# [END howto_operator_bash_skip]
-this_will_skip >> run_this_last
 
 if __name__ == "__main__":
     dag.cli()
